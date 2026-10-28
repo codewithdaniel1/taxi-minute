@@ -6,6 +6,12 @@ Taxi-Minute uses the [NYC Taxi and Limousine Commission's monthly yellow-taxi tr
 
 The label is elapsed minutes from `tpep_pickup_datetime` to `tpep_dropoff_datetime`. Model inputs available before a trip are `PULocationID`, `DOLocationID`, and pickup date and time. The website accepts addresses, map pins, or named taxi zones and a departure time in New York time. Metered distance, fare, and other after-trip fields are excluded.
 
+## Where the data lives
+
+The pipeline downloads the four selected monthly Parquet files and taxi-zone lookup CSV into `.data/` at the repository root. This directory is created on the first download and is ignored by Git. It is a local cache, so you can delete it and the next training run will download the files again. A plain `data/` directory is not used or tracked by this project.
+
+GitHub Actions starts on a fresh runner, downloads the files it needs into its own temporary `.data/`, and discards that cache when the job ends. The repository stores the browser-ready model and metadata, not the raw trip records. See [`site/metadata.json`](../site/metadata.json) for the exact months and source-file hashes used by the current published model; those values update when a candidate is promoted.
+
 ## Address and map inputs
 
 The browser uses [NYC Planning's GeoSearch](https://geosearch.planninglabs.nyc/docs/) for address suggestions and geocoding. Search requests are sent to that service; the trip prediction stays in the browser. Users can also place and drag pickup and drop-off pins without an address search. The site matches each coordinate to one of the [TLC's taxi-zone polygons](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) using a local point-in-polygon lookup. [`site/zone-boundaries.json`](../site/zone-boundaries.json) is a compact WGS84 conversion of the TLC shapefile, built with [`scripts/build_zone_boundaries.py`](../scripts/build_zone_boundaries.py). Named zone selectors remain available if search or map services are unavailable.

@@ -2,7 +2,7 @@
 
 **Estimate an NYC yellow-taxi ride time before you leave.** Search pickup and drop-off addresses or place pins on the map, choose a departure time, and get an estimated duration and rough range. Addresses and pins are matched to TLC taxi zones; the prediction itself runs in your browser.
 
-**[Try the live website](https://codewithdaniel1.github.io/taxi-minute/)** · [See the current model and data months](site/metadata.json) · [View the update workflow](.github/workflows/update-and-deploy.yml)
+**[Try the live website](https://codewithdaniel1.github.io/taxi-minute/)** · [See the current model and data months](site/metadata.json) · [View weekly runs](https://github.com/codewithdaniel1/taxi-minute/actions/workflows/update-and-deploy.yml)
 
 ## How it works
 
@@ -30,8 +30,9 @@ The model uses only information available before a ride: taxi zones and departur
 | [`models/champion.txt`](models/champion.txt) | Native LightGBM model for the next update's comparison |
 | [`tests/`](tests/) | Browser versus native model prediction checks |
 | [`.github/workflows/update-and-deploy.yml`](.github/workflows/update-and-deploy.yml) | Weekly update, tests, commit, and Pages deployment |
+| [`.data/`](docs/data-and-model.md#where-the-data-lives) | Local download cache, created on demand and ignored by Git |
 
-Downloaded trip files live in `.data/` locally and are ignored by Git. The committed browser model, boundaries, and metadata are the website's deployable artifacts. The native model, parity cases, and lockfile support reliable updates and checks.
+There is no tracked `data/` folder. Downloaded trip files go into `.data/` when you run training locally; GitHub Actions creates its own temporary cache on each run. Raw trip files are never committed. The committed browser model, boundaries, and metadata are the website's deployable artifacts. The native model, parity cases, and lockfile support reliable updates and checks.
 
 ## Run locally
 
@@ -48,6 +49,8 @@ Open <http://localhost:8000>. If no newer TLC month is available, the update com
 
 ## Current status and scope
 
-The website shows the validation month and error for the model it serves. [`site/metadata.json`](site/metadata.json) records training and validation months, row counts, metrics, source URLs, and SHA-256 hashes; it is updated whenever a new model is promoted. The weekly GitHub Actions run checks for a newer TLC month and only commits a model that passes the quality gates. The site remains available with the last published model when no new model is promoted.
+The website shows the validation month and error for the model it serves. [`site/metadata.json`](site/metadata.json) records training and validation months, row counts, metrics, source URLs, and SHA-256 hashes; it is updated whenever a new model is promoted. The [GitHub Actions workflow](.github/workflows/update-and-deploy.yml) is scheduled for Mondays at 08:17 UTC. It checks for a newer TLC month and only commits a model that passes the quality gates. It deploys the site when a model changes; a manual run also redeploys it. The site remains available with the last published model when no new model is promoted.
+
+GitHub [may delay or drop scheduled runs and disables scheduled workflows in public repositories after 60 days without repository activity](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule). This setup cannot guarantee unattended updates for months. Check the [run history](https://github.com/codewithdaniel1/taxi-minute/actions/workflows/update-and-deploy.yml) and [current model metadata](site/metadata.json); see [operations](docs/operations.md) for recovery steps.
 
 Predictions cover historical NYC yellow-taxi trips between TLC taxi zones, with supported trip durations of 2–120 minutes. Addresses and pins select zones, so two addresses in the same zones at the same departure time get the same prediction. They are planning estimates, not promises for a particular street address or traffic condition. [Read the model limitations](docs/data-and-model.md#limitations).
