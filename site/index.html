@@ -3,60 +3,92 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#151714">
-  <meta name="description" content="Estimate how long an NYC yellow-taxi ride may take using historical trip data.">
-  <title>Taxi-Minute — NYC ride time estimates</title>
+  <meta name="theme-color" content="#12212a">
+  <meta name="description" content="Estimate an NYC yellow-taxi ride time by searching addresses or placing pins on a map.">
+  <title>Taxi-Minute — map your NYC taxi ride</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./vendor/leaflet.css">
   <link rel="stylesheet" href="./style.css">
+  <script src="./vendor/leaflet.js"></script>
   <script type="module" src="./app.js"></script>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="Taxi-Minute home"><span class="brand-mark">T<span>•</span>M</span><span>Taxi-Minute</span></a>
-      <span class="header-tag">NYC YELLOW TAXI · TRIP TIME</span>
-    </header>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Taxi-Minute home"><span class="brand-mark">T<span>•</span>M</span><span>Taxi-Minute</span></a>
+    <span class="header-tag">NEW YORK CITY · YELLOW TAXI TIME</span>
+    <a class="header-link" href="https://github.com/codewithdaniel1/taxi-minute" target="_blank" rel="noopener noreferrer">How it works <span aria-hidden="true">↗</span></a>
+  </header>
 
-    <main>
-      <section class="hero" aria-labelledby="headline">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="eyebrow-line"></span> A smarter way to plan the ride</p>
-          <h1 id="headline">Know the time<br><em>before you go.</em></h1>
-          <p class="intro">Choose your pickup, destination, and departure time. Taxi-Minute uses real NYC yellow-taxi trips to estimate how long the ride may take.</p>
-          <div class="hero-proof"><span class="proof-dot"></span> No account. Your trip inputs stay in your browser.</div>
+  <main>
+    <div class="workspace">
+      <aside class="planner" aria-label="Plan a taxi ride">
+        <div class="planner-intro">
+          <p class="eyebrow"><span class="eyebrow-dot"></span> NYC RIDE PLANNER</p>
+          <h1>Know the time<br><em>before you go.</em></h1>
+          <p>Search an address or place two pins. We’ll turn each location into a taxi zone and estimate your ride time.</p>
         </div>
 
-        <div class="estimate-panel">
-          <div class="panel-top"><span class="panel-kicker">PLAN YOUR RIDE</span><span class="panel-icon" aria-hidden="true">↗</span></div>
-          <form id="prediction-form">
-            <label for="pickup-zone">Pickup zone</label>
-            <select id="pickup-zone" required><option value="">Select a pickup zone</option></select>
+        <form id="prediction-form">
+          <div class="address-field" id="pickup-field">
+            <label for="pickup-address"><span class="field-marker field-marker--pickup" aria-hidden="true">A</span> Pickup</label>
+            <input id="pickup-address" type="search" placeholder="Enter an NYC address" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="pickup-suggestions">
+            <div id="pickup-suggestions" class="suggestions" role="listbox" aria-label="Pickup address suggestions" hidden></div>
+            <p id="pickup-match" class="field-match">Search an address or place a pin.</p>
+          </div>
 
-            <label for="dropoff-zone">Drop-off zone</label>
-            <select id="dropoff-zone" required><option value="">Select a destination</option></select>
+          <div class="address-field" id="dropoff-field">
+            <label for="dropoff-address"><span class="field-marker field-marker--dropoff" aria-hidden="true">B</span> Drop-off</label>
+            <input id="dropoff-address" type="search" placeholder="Enter an NYC address" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="dropoff-suggestions">
+            <div id="dropoff-suggestions" class="suggestions" role="listbox" aria-label="Drop-off address suggestions" hidden></div>
+            <p id="dropoff-match" class="field-match">Search an address or place a pin.</p>
+          </div>
 
-            <label for="departure">Departure time <span class="label-note">New York time</span></label>
-            <input id="departure" type="datetime-local" required>
+          <div class="map-actions" role="group" aria-label="Place pins on the map">
+            <button class="map-action is-active" id="place-pickup" type="button" aria-pressed="true"><span class="mini-pin mini-pin--pickup" aria-hidden="true"></span> Place pickup pin</button>
+            <button class="map-action" id="place-dropoff" type="button" aria-pressed="false"><span class="mini-pin mini-pin--dropoff" aria-hidden="true"></span> Place drop-off pin</button>
+          </div>
 
-            <button type="submit" disabled>Estimate trip time <span aria-hidden="true">→</span></button>
-          </form>
-          <p id="status" class="status" role="status" aria-live="polite">Loading model…</p>
+          <label class="date-label" for="departure">Departure time <span>New York time</span></label>
+          <input id="departure" type="datetime-local" required>
+
+          <button class="estimate-button" id="estimate-button" type="submit" disabled>Estimate trip time <span aria-hidden="true">→</span></button>
+          <p id="status" class="status" role="status" aria-live="polite">Loading predictor…</p>
+
           <div id="result" class="result" aria-live="polite" hidden>
-            <p class="result-label">ESTIMATED RIDE TIME</p>
-            <p class="result-number"><span id="estimate">—</span><span class="result-unit">min</span></p>
-            <p class="result-range">A rough range: <strong id="range">—</strong></p>
+            <div class="result-top"><span>YOUR ESTIMATED RIDE</span><span class="result-spark" aria-hidden="true">✦</span></div>
+            <p class="result-number"><span id="estimate">—</span><span>min</span></p>
+            <p class="result-range">Rough range: <strong id="range">—</strong></p>
+            <p id="matched-route" class="matched-route"></p>
             <p id="route-note" class="route-note"></p>
           </div>
-        </div>
-      </section>
 
-      <section class="details" aria-label="About this estimate">
-        <div class="detail-card"><span class="detail-index">01 / DATA</span><h2>Grounded in real trips.</h2><p>Trained on public NYC Taxi and Limousine Commission yellow-taxi records, then checked against a later month.</p></div>
-        <div class="detail-card"><span class="detail-index">02 / CONTEXT</span><h2>A useful estimate, not a promise.</h2><p>Traffic, weather, events, and exact street addresses can change your actual travel time. The range reflects typical historical error.</p></div>
-        <div class="detail-card"><span class="detail-index">03 / MODEL</span><h2>Know what is behind it.</h2><p>Latest validation month: <strong id="model-date">—</strong>. Typical absolute error: <strong id="model-mae">—</strong> across <strong id="model-rows">—</strong> validation trips.</p></div>
-      </section>
-    </main>
+          <details id="manual-zones" class="manual-zones">
+            <summary>Use taxi zones instead</summary>
+            <p>Use these if an address is missing or the map is unavailable.</p>
+            <label for="pickup-zone">Pickup zone</label>
+            <select id="pickup-zone"><option value="">Select a pickup zone</option></select>
+            <label for="dropoff-zone">Drop-off zone</label>
+            <select id="dropoff-zone"><option value="">Select a drop-off zone</option></select>
+          </details>
+        </form>
+        <p class="privacy-note">Address searches go to <a href="https://geosearch.planninglabs.nyc/" target="_blank" rel="noopener noreferrer">NYC GeoSearch</a>. Your prediction runs in this browser.</p>
+      </aside>
 
-    <footer><span>Taxi-Minute · An independent educational project</span><a href="https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page" target="_blank" rel="noopener noreferrer">Data source: NYC TLC ↗</a></footer>
-  </div>
+      <section class="map-shell" aria-label="NYC taxi-zone map">
+        <div id="map" class="map-canvas"></div>
+        <div id="map-unavailable" class="map-unavailable" hidden>Map unavailable. You can still choose taxi zones in the planner.</div>
+        <div class="map-guide"><span class="map-guide-icon" aria-hidden="true">↗</span><span id="map-guide-text">Click the map to place your pickup pin</span></div>
+        <div class="map-caption"><strong>Explore NYC by pin.</strong><span>Drag either pin to fine-tune the location. The line between pins is not a street route.</span></div>
+      </section>
+    </div>
+
+    <section class="about" aria-label="About the estimate">
+      <div><span class="about-index">01 / DATA</span><h2>Real trips. Real context.</h2><p>Trained on public NYC Taxi and Limousine Commission yellow-taxi records and checked against a later month.</p></div>
+      <div><span class="about-index">02 / MODEL</span><h2>Built for planning.</h2><p>Latest validation month: <strong id="model-date">—</strong>. Mean absolute error: <strong id="model-mae">—</strong> across <strong id="model-rows">—</strong> trips.</p></div>
+      <div><span class="about-index">03 / SCOPE</span><h2>Know the limits.</h2><p>Addresses and pins identify taxi zones. The model does not use live traffic or an exact street route.</p></div>
+    </section>
+  </main>
+
+  <footer><span>Taxi-Minute · An independent educational project</span><span><a href="https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page" target="_blank" rel="noopener noreferrer">Trip data: NYC TLC</a> · <a href="https://geosearch.planninglabs.nyc/" target="_blank" rel="noopener noreferrer">Address search: NYC Planning</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">Map: OpenStreetMap</a></span></footer>
 </body>
 </html>

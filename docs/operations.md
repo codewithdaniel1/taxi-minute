@@ -21,6 +21,8 @@ python3 -m http.server 8000 --directory site
 
 `uv run python scripts/update.py --force` retrains on the latest four discoverable months even if the validation month has not changed. `--months YYYY-MM YYYY-MM YYYY-MM YYYY-MM` selects four published months for a reproducible run. Raw downloads are cached under `.data/` and are ignored by Git. To preview the website, open <http://localhost:8000>.
 
+The taxi-zone boundaries are a committed static asset and do not need rebuilding for each model update. If TLC revises its shapefile, rebuild them with `uv run --no-project --with pyshp --with pyproj python3 scripts/build_zone_boundaries.py`, review the changed file, and run `npm test` before committing it.
+
 ## Deployment settings
 
 The repository is public and [GitHub Pages is configured to use **GitHub Actions** as its build source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). The workflow needs `contents: write` to commit approved artifacts and `pages: write` plus `id-token: write` to deploy. The `github-pages` environment points to the live website. No paid hosting or prediction API is required for this setup, though GitHub's service limits and policies can change.

@@ -4,7 +4,13 @@
 
 Taxi-Minute uses the [NYC Taxi and Limousine Commission's monthly yellow-taxi trip records](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) and its [taxi-zone lookup table](https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv). TLC publishes the trip files as Parquet, typically with a two-month delay. TLC notes that the records come from authorized technology providers and does not guarantee their accuracy.
 
-The label is elapsed minutes from `tpep_pickup_datetime` to `tpep_dropoff_datetime`. Inputs available before a trip are `PULocationID`, `DOLocationID`, and pickup date and time. The website asks users to choose the corresponding named zones and a departure time in New York time. Metered distance, fare, and other after-trip fields are excluded.
+The label is elapsed minutes from `tpep_pickup_datetime` to `tpep_dropoff_datetime`. Model inputs available before a trip are `PULocationID`, `DOLocationID`, and pickup date and time. The website accepts addresses, map pins, or named taxi zones and a departure time in New York time. Metered distance, fare, and other after-trip fields are excluded.
+
+## Address and map inputs
+
+The browser uses [NYC Planning's GeoSearch](https://geosearch.planninglabs.nyc/docs/) for address suggestions and geocoding. Search requests are sent to that service; the trip prediction stays in the browser. Users can also place and drag pickup and drop-off pins without an address search. The site matches each coordinate to one of the [TLC's taxi-zone polygons](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) using a local point-in-polygon lookup. [`site/zone-boundaries.json`](../site/zone-boundaries.json) is a compact WGS84 conversion of the TLC shapefile, built with [`scripts/build_zone_boundaries.py`](../scripts/build_zone_boundaries.py). Named zone selectors remain available if search or map services are unavailable.
+
+The map uses [Leaflet](https://leafletjs.com/) with [OpenStreetMap tiles](https://operations.osmfoundation.org/policies/tiles/). These public services are best effort; the site relies on them for map and address interactions, while the model and manual zone selection are hosted with the site. The line drawn between two pins is a visual connection, not a calculated road route.
 
 ## Selection and training
 
@@ -23,6 +29,7 @@ The pipeline writes a compact tree model to [`site/model.json`](../site/model.js
 ## Limitations
 
 - The estimate uses taxi zones, not exact addresses, route choices, live traffic, weather, or events.
+- Addresses in the same pickup and drop-off zones produce the same model features for the same departure time. Points outside the supported polygons cannot be used as pins; users can choose zones manually instead.
 - The displayed rough range is built from the 80th percentile of absolute errors on one validation month. It is a global guide, not a calibrated interval for each route or a guarantee of coverage.
 - A new TLC month arrives after a delay. Trip records may have inaccuracies, and changes in source schema or page links can cause the update workflow to fail until the parser is adjusted.
 - The model is scoped to yellow-taxi trips with valid 2–120 minute recorded durations. Other services and trips outside that range are not represented in training or validation.
