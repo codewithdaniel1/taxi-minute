@@ -1,4 +1,4 @@
-# Updates and deployment
+# MLOps operations and deployment
 
 ## Weekly run
 
@@ -7,6 +7,23 @@
 If the newest month has not changed, the scheduled run makes no commit and skips deployment. A manual run redeploys the current site even if no new model is approved. If training, quality checks, tests, or deployment fail, the workflow reports a failure; inspect its logs in the [Actions tab](https://github.com/codewithdaniel1/taxi-minute/actions). A rejected candidate keeps the current model.
 
 [GitHub may delay or drop scheduled jobs and automatically disables scheduled workflows in public repositories after 60 days without repository activity](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule). The weekly schedule is therefore best effort and cannot be guaranteed to continue during a long period away. The website still serves the last deployed model. Check the validation month on the site or in [`site/metadata.json`](../site/metadata.json), inspect the [run history](https://github.com/codewithdaniel1/taxi-minute/actions/workflows/update-and-deploy.yml), and [re-enable the workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows) if GitHub disabled it. Then use **Run workflow** to check for new TLC data and redeploy.
+
+## What to monitor
+
+| Signal | Where to check | What it means |
+| --- | --- | --- |
+| Last run and job result | [Workflow run history](https://github.com/codewithdaniel1/taxi-minute/actions/workflows/update-and-deploy.yml) | A missing or failed run needs investigation; a successful run may still publish nothing if no newer month exists. |
+| Published validation month | [Live website](https://codewithdaniel1.github.io/taxi-minute/) or [`site/metadata.json`](../site/metadata.json) | Shows which TLC month the served model was evaluated on. Compare it with the latest yellow-taxi month on the [TLC page](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page). |
+| Model quality | [`site/metadata.json`](../site/metadata.json) | Holds candidate errors, baseline errors, row counts, and source hashes for the published release. |
+
+There is no automatic alerting or live outcome monitoring. The browser makes predictions without recording actual trip durations, so production error cannot be measured from user traffic. The published model stays available if an update is skipped or fails.
+
+## When a run needs attention
+
+1. Open the failed run and identify whether discovery/download, training, tests, Git push, or Pages deployment failed. Fix the relevant stage and use **Run workflow** again.
+2. If the run succeeds without a commit, compare the latest TLC month with the validation month in `site/metadata.json`. No newer month means there is nothing to retrain; a candidate that loses to the incumbent is also kept out of production.
+3. If GitHub disabled the schedule, [re-enable the workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows) and run it manually. Check the website's validation month afterward.
+4. If a published model must be rolled back, use the earlier Git commit as the source for `site/model.json`, `site/zones.json`, `site/metadata.json`, `models/champion.txt`, and `tests/parity_cases.json`, and run `npm test`. The current workflow has no deploy-only rollback path: **Run workflow** checks for newer TLC data first and may train another candidate. Add a deploy-only path or perform a reviewed manual Pages deployment before relying on rollback in production.
 
 ## Local commands
 

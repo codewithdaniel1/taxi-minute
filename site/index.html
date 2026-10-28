@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#12212a">
-  <meta name="description" content="Estimate an NYC yellow-taxi ride time by searching addresses or placing pins on a map.">
+  <meta name="description" content="Estimate an NYC yellow-taxi ride time with a map-based predictor backed by an open MLOps pipeline.">
   <title>Taxi-Minute — map your NYC taxi ride</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./vendor/leaflet.css">
@@ -82,13 +82,13 @@
       </section>
     </div>
 
-    <section class="about" aria-label="About the estimate">
+    <section class="about" aria-label="About the model and pipeline">
       <div><span class="about-index">01 / DATA</span><h2>Real trips. Real context.</h2><p>Trained on public NYC Taxi and Limousine Commission yellow-taxi records and checked against a later month.</p></div>
-      <div><span class="about-index">02 / MODEL</span><h2>Built for planning.</h2><p>Latest validation month: <strong id="model-date">—</strong>. Mean absolute error: <strong id="model-mae">—</strong> across <strong id="model-rows">—</strong> trips.</p></div>
-      <div><span class="about-index">03 / SCOPE</span><h2>Know the limits.</h2><p>Addresses and pins identify taxi zones. The model does not use live traffic or an exact street route.</p></div>
+      <div><span class="about-index">02 / VALIDATION</span><h2>Measured before release.</h2><p>Latest validation month: <strong id="model-date">—</strong>. Mean absolute error: <strong id="model-mae">—</strong> across <strong id="model-rows">—</strong> trips.</p></div>
+      <div><span class="about-index">03 / OPERATIONS</span><h2>Updated by a pipeline.</h2><p>Weekly checks train, test, and publish approved models. <a href="https://github.com/codewithdaniel1/taxi-minute/actions/workflows/update-and-deploy.yml" target="_blank" rel="noopener noreferrer">View the run history</a>. Estimates use taxi zones, not live traffic.</p></div>
     </section>
   </main>
 
-  <footer><span>Taxi-Minute · An independent educational project</span><span><a href="https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page" target="_blank" rel="noopener noreferrer">Trip data: NYC TLC</a> · <a href="https://geosearch.planninglabs.nyc/" target="_blank" rel="noopener noreferrer">Address search: NYC Planning</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">Map: OpenStreetMap</a></span></footer>
+  <footer><span>Taxi-Minute · An open MLOps project</span><span><a href="https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page" target="_blank" rel="noopener noreferrer">Trip data: NYC TLC</a> · <a href="https://geosearch.planninglabs.nyc/" target="_blank" rel="noopener noreferrer">Address search: NYC Planning</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">Map: OpenStreetMap</a></span></footer>
 </body>
 </html>
