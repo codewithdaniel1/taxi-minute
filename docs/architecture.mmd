@@ -1,35 +1,16 @@
-flowchart LR
-    subgraph sources[External sources]
-        TLC["NYC TLC monthly trip files<br/>and taxi-zone lookup"]
-        GEO["NYC GeoSearch<br/>address suggestions"]
-        OSM["OpenStreetMap<br/>map tiles"]
-    end
-
-    subgraph pipeline[GitHub Actions: weekly or manual]
-        CHECK["Discover a newer TLC month"]
-        DATA["Download to temporary .data/<br/>filter and sample trips"]
-        TRAIN["Train LightGBM<br/>on earlier months"]
-        EVAL["Validate on newest month<br/>compare baseline and incumbent"]
-        TEST["Check browser and native<br/>prediction parity"]
-    end
-
-    subgraph release[Versioned release]
-        GIT["Commit approved model,<br/>metrics, and source hashes"]
-        PAGES["Deploy static site<br/>to GitHub Pages"]
-    end
-
-    subgraph browser[Visitor browser]
-        INPUT["Addresses or pins<br/>and departure time"]
-        ZONES["Resolve coordinates<br/>to TLC taxi zones"]
-        PREDICT["Run committed model.json<br/>in the browser"]
-        RESULT["Show trip-time estimate"]
-    end
-
-    TLC --> CHECK -->|new month| DATA --> TRAIN --> EVAL -->|quality gates pass| TEST -->|tests pass| GIT --> PAGES
-    CHECK -->|no new month| CURRENT["Keep current model"]
-    EVAL -->|candidate rejected| CURRENT
-    PAGES --> PREDICT
-    PAGES --> ZONES
-    INPUT --> ZONES --> PREDICT --> RESULT
-    GEO --> INPUT
-    OSM --> INPUT
+flowchart TB
+    TLC["NYC TLC monthly trip records<br/>and taxi-zone lookup"] --> CHECK["GitHub Actions checks for a newer month"]
+    CHECK -->|new month| DATA["Download to .data/<br/>filter and sample trips"]
+    CHECK -->|no new month| KEEP["Keep current published model"]
+    DATA --> TRAIN["Train LightGBM on earlier months"]
+    TRAIN --> EVAL["Validate on newest month<br/>compare baseline and incumbent"]
+    EVAL -->|rejected| KEEP
+    EVAL -->|approved| TEST["Test browser and native prediction parity"]
+    TEST --> COMMIT["Commit approved model,<br/>metrics, and source hashes"]
+    COMMIT --> DEPLOY["Deploy site, model, and zone boundaries<br/>to GitHub Pages"]
+    DEPLOY --> INPUT["Visitor enters addresses or pins<br/>and departure time"]
+    GEO["NYC GeoSearch"] --> INPUT
+    OSM["OpenStreetMap tiles"] --> INPUT
+    INPUT --> ZONES["Match coordinates to TLC taxi zones"]
+    ZONES --> MODEL["Run model.json in the browser"]
+    MODEL --> ETA["Show estimated trip time"]

@@ -6,33 +6,24 @@
 
 ## System design and MLOps lifecycle
 
-The architecture has two paths: a batch pipeline that releases a model, and a browser path that serves predictions. [Open the complete diagram](docs/architecture.mmd) in its own view to zoom and pan.
-
-### Training and release
+This single diagram follows the system from TLC data to a visitor's prediction. [Open it separately](docs/architecture.mmd) to use GitHub's zoom and pan controls.
 
 ```mermaid
 flowchart TB
-    TLC["NYC TLC monthly trip records"] --> CHECK["Check for a newer month"]
-    CHECK -->|new data| DATA["Download, filter, and sample"]
-    CHECK -->|no new data| KEEP["Keep current model"]
-    DATA --> TRAIN["Train on earlier months"]
+    TLC["NYC TLC monthly trip records<br/>and taxi-zone lookup"] --> CHECK["GitHub Actions checks for a newer month"]
+    CHECK -->|new month| DATA["Download to .data/<br/>filter and sample trips"]
+    CHECK -->|no new month| KEEP["Keep current published model"]
+    DATA --> TRAIN["Train LightGBM on earlier months"]
     TRAIN --> EVAL["Validate on newest month<br/>compare baseline and incumbent"]
     EVAL -->|rejected| KEEP
-    EVAL -->|approved| TEST["Test browser prediction parity"]
-    TEST --> COMMIT["Commit model and provenance"]
-    COMMIT --> DEPLOY["Deploy to GitHub Pages"]
-```
-
-### Prediction serving
-
-```mermaid
-flowchart TB
-    USER["Visitor: addresses or pins<br/>and departure time"] --> ZONES["Match locations to TLC taxi zones"]
-    GEO["NYC GeoSearch"] --> USER
-    OSM["OpenStreetMap tiles"] --> USER
-    PAGES["GitHub Pages:<br/>model and zone boundaries"] --> ZONES
-    ZONES --> MODEL["Run model in the browser"]
-    PAGES --> MODEL
+    EVAL -->|approved| TEST["Test browser and native prediction parity"]
+    TEST --> COMMIT["Commit approved model,<br/>metrics, and source hashes"]
+    COMMIT --> DEPLOY["Deploy site, model, and zone boundaries<br/>to GitHub Pages"]
+    DEPLOY --> INPUT["Visitor enters addresses or pins<br/>and departure time"]
+    GEO["NYC GeoSearch"] --> INPUT
+    OSM["OpenStreetMap tiles"] --> INPUT
+    INPUT --> ZONES["Match coordinates to TLC taxi zones"]
+    ZONES --> MODEL["Run model.json in the browser"]
     MODEL --> ETA["Show estimated trip time"]
 ```
 
