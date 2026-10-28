@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#151714">
+  <meta name="description" content="Estimate how long an NYC yellow-taxi ride may take using historical trip data.">
+  <title>Taxi-Minute — NYC ride time estimates</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Taxi-Minute home"><span class="brand-mark">T<span>•</span>M</span><span>Taxi-Minute</span></a>
+      <span class="header-tag">NYC YELLOW TAXI · TRIP TIME</span>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="headline">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> A smarter way to plan the ride</p>
+          <h1 id="headline">Know the time<br><em>before you go.</em></h1>
+          <p class="intro">Choose your pickup, destination, and departure time. Taxi-Minute uses real NYC yellow-taxi trips to estimate how long the ride may take.</p>
+          <div class="hero-proof"><span class="proof-dot"></span> No account. Your trip inputs stay in your browser.</div>
+        </div>
+
+        <div class="estimate-panel">
+          <div class="panel-top"><span class="panel-kicker">PLAN YOUR RIDE</span><span class="panel-icon" aria-hidden="true">↗</span></div>
+          <form id="prediction-form">
+            <label for="pickup-zone">Pickup zone</label>
+            <select id="pickup-zone" required><option value="">Select a pickup zone</option></select>
+
+            <label for="dropoff-zone">Drop-off zone</label>
+            <select id="dropoff-zone" required><option value="">Select a destination</option></select>
+
+            <label for="departure">Departure time <span class="label-note">New York time</span></label>
+            <input id="departure" type="datetime-local" required>
+
+            <button type="submit" disabled>Estimate trip time <span aria-hidden="true">→</span></button>
+          </form>
+          <p id="status" class="status" role="status" aria-live="polite">Loading model…</p>
+          <div id="result" class="result" aria-live="polite" hidden>
+            <p class="result-label">ESTIMATED RIDE TIME</p>
+            <p class="result-number"><span id="estimate">—</span><span class="result-unit">min</span></p>
+            <p class="result-range">A rough range: <strong id="range">—</strong></p>
+            <p id="route-note" class="route-note"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="details" aria-label="About this estimate">
+        <div class="detail-card"><span class="detail-index">01 / DATA</span><h2>Grounded in real trips.</h2><p>Trained on public NYC Taxi and Limousine Commission yellow-taxi records, then checked against a later month.</p></div>
+        <div class="detail-card"><span class="detail-index">02 / CONTEXT</span><h2>A useful estimate, not a promise.</h2><p>Traffic, weather, events, and exact street addresses can change your actual travel time. The range reflects typical historical error.</p></div>
+        <div class="detail-card"><span class="detail-index">03 / MODEL</span><h2>Know what is behind it.</h2><p>Latest validation month: <strong id="model-date">—</strong>. Typical absolute error: <strong id="model-mae">—</strong> across <strong id="model-rows">—</strong> validation trips.</p></div>
+      </section>
+    </main>
+
+    <footer><span>Taxi-Minute · An independent educational project</span><a href="https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page" target="_blank" rel="noopener noreferrer">Data source: NYC TLC ↗</a></footer>
+  </div>
+</body>
+</html>
