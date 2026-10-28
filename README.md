@@ -6,7 +6,7 @@
 
 ## System design and MLOps lifecycle
 
-This single diagram follows the system from TLC data to a visitor's prediction. [Open it separately](docs/architecture.mmd) to use GitHub's zoom and pan controls.
+This diagram follows the system from TLC data to a visitor's prediction.
 
 ```mermaid
 flowchart TB
